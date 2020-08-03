@@ -6,12 +6,12 @@
     export let index
     //Image (pair) identifier
     export let item = ''
+    //Image URL
+    export let url;
     //Component State
     export let disabled, show = false, selected = false, won = false
 
-    //Mare the image url path form our item number
-    $: filenumber = (''+item).padStart(3, '0');
-    $: file = `/assets/images/svg/${filenumber}-lego.svg`
+   
     
     //Show the back of the card if it is selected or won
     $: show = selected || won;
@@ -30,7 +30,7 @@
     <section class="front" >
         <div>
             {#if item}
-                <img src='{file}' alt='radom image'/>
+                <img src='{url}' alt='radom image'/>
             {/if}
         </div>
     </section>

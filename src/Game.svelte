@@ -1,6 +1,6 @@
 <script>
 import Card from './Card.svelte'
-import {scale} from 'svelte/transition'
+import {scale, fade} from 'svelte/transition'
 
 
 //Number of pairs in the game
@@ -11,8 +11,8 @@ const optionLength = 24
 //Empty filled array for library options - We keep this handy for resetting the game
 const blank = Array(optionLength).fill(0)
 //Map the index +1 into out build array - As out library is 001.jpg format (in this example we end up with an array with 1-24 in it [1, 2, 3... 24])
-const allOptions = blank.map((x, i) =>  i+1);
-
+const allOptions = blank.map((x, i) =>  (''+ (i+1)).padStart(3, '0'))
+    
 //Init game varables
 let gameItems //Storage for selected game images 
 let tries //Number of goes
@@ -24,12 +24,25 @@ let selectedA, selectedB //Holders for checking our selected pairs
 //We are using Svelte rective properties to reset the game when 'options' is changed. So we start with populating with all options available in the game
 let options =  allOptions
 
+let promises = pause(3000);
+let promiseCount = 0
+
 //Each time options changes we reset the game vars - this only changes when the game starts or we restart the game (as easy as options = options)
-$: if(options) {time = 0; tries = 0, selectedA = null, selectedB = null, started = null}
+$: if(options) {time = 0; tries = 0, selectedA = null, selectedB = null, started = null, promiseCount = 0}
 //Generate out list of play cards - We duplicate our options array, randomise it and take the number of elements we need for the game - in this case 10 items - This is triggered to recalc when options variable changes.
 $: gameItems = [...options].sort(randomSort).slice(0, pairs)
+
+//Promise to preload all images before rendering the game.
+$: promises = Promise.all(gameItems.filter(x => x).map(x => load_image(`/assets/images/svg/${x}-lego.svg`)))
+
 // We then duplicate the array twice (so we will have two of each card), randomise the list and use map to initiate an object for each time to store its state - This is triggered when the above code runs and gameItems changes
-$: cards = [...gameItems, ...gameItems].sort(randomSort).map( x => {return {item: x};});
+$: cards = [...gameItems, ...gameItems].sort(randomSort).map( x => {
+    return {
+        item: x,
+        url: `/assets/images/svg/${x}-lego.svg`
+    };
+});
+
 //Makes us an array of all won cards - Score helper
 $: wonCards = cards.filter(c=>c.won)
 //Is the game won - the length of won cards is the length of our cards array, this doesn't run if the game interface is disabled (used to stop flash of Winning message as we reset the game and init arrays)
@@ -122,39 +135,58 @@ function pause(ms) {
 //Helper function to pad our timer numbers and kill fractions
 const niceTime = (t) => (''+Math.floor(t)).padStart(2, '0'); 
 
-
+function load_image(src) {
+	return new Promise((fulfil, reject) => {
+		const img = new Image();
+		img.onload = () => fulfil();
+		img.onerror = reject;
+		img.src = src;
+	}).then(
+        () => promiseCount++
+    );
+}
 
 </script>
 <main>
-    <h2>
-        <span>
-            <!-- half the won cards (as there are two wins for each pair), against the total number of pairs -->
-            Score: {wonCards.length / 2}/{pairs} 
-        </span>
-        <span>
-            Tries: {tries}
-        </span>
-        <span>
-            <!-- Split our seconds into hh:mm:ss formart -->
-            Time: {niceTime(time/60/60)}:{niceTime((time/60)%60)}:{niceTime(time%60)}
-        </span>
-    </h2>
-    <!-- Messaging on game completion -->
-    {#if wonGame}
-        <div in:scale class="won">
-            <h3>Yay you won the game!!!</h3>
-            <button type=button on:click={restart}>restart</button>
-        </div>   
-    {/if}    
-    <ul>
-    <!-- Loop through and draw each card -->    
-    {#each cards as item, i}
-        <li>
-            <!-- We want to pass everything in the cards state as props to our component. Disabled is a global game state so we pass that seperatly, we also pass the index to the component so we can find it in the state array when the use interacts later  -->
-            <Card {...item} index={i} {disabled} on:selectCard={selectCard} />
-        </li>
-    {/each}
-    </ul>
+    
+    {#await promises}
+    <div class="message">
+        <h3>Loading.... </h3>
+        Image {promiseCount} of {pairs} 
+    </div>
+    {:then results}
+        <h2>
+            <span>
+                <!-- half the won cards (as there are two wins for each pair), against the total number of pairs -->
+                Score: {wonCards.length / 2}/{pairs} 
+            </span>
+            <span>
+                Tries: {tries}
+            </span>
+            <span>
+                <!-- Split our seconds into hh:mm:ss formart -->
+                Time: {niceTime(time/60/60)}:{niceTime((time/60)%60)}:{niceTime(time%60)}
+            </span>
+        </h2>
+        <!-- Messaging on game completion -->
+        {#if wonGame}
+            <div in:scale class="won message">
+                <h3>Yay you won the game!!!</h3>
+                <button type=button on:click={restart}>restart</button>
+            </div>   
+        {/if} 
+        <ul>
+        <!-- Loop through and draw each card -->    
+        {#each cards as item, i}
+            <li>
+                <!-- We want to pass everything in the cards state as props to our component. Disabled is a global game state so we pass that seperatly, we also pass the index to the component so we can find it in the state array when the use interacts later  -->
+                <Card {...item} index={i} {disabled} on:selectCard={selectCard} />
+            </li>
+        {/each}
+        </ul>
+    {:catch error}
+        Could not load all images :(
+    {/await}
     <footer>
     <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
     <button type=button on:click={restart}>restart</button>
@@ -194,14 +226,21 @@ const niceTime = (t) => (''+Math.floor(t)).padStart(2, '0');
         position: relative; 
         place-items:center;  
     }
-    main div.won {
+
+
+    main div.message {
         padding: 8em;
+        
+        text-align: center;
+
+    }
+
+    main div.won {
         position: absolute;
         background-color: rgba(200,255,200,0.1);
         box-shadow: 2px 2px 5px 4px rgba(0,0,0,0.25);
         z-index: 1;
         backdrop-filter: blur(3px);
-        text-align: center;
 
     }
 
@@ -223,12 +262,13 @@ const niceTime = (t) => (''+Math.floor(t)).padStart(2, '0');
         background-color: #eee;
         color: #333;
         outline: none;
-        border: 2px solid #ff3e00;
+        border: 2px solid #666;
         border-radius: 10px;
         padding: 0.5em 1em;
         text-transform: uppercase;
         margin-top:20px;
         cursor:pointer;
+        transition:all 0.3s;
     }
 
     div button {
@@ -236,6 +276,10 @@ const niceTime = (t) => (''+Math.floor(t)).padStart(2, '0');
         padding: 1em 2em;
         border-color: rgba(100,255,100,1);
         box-shadow: 0px 0px 9px 2px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+        border: 2px solid #ff3e00;
     }
 
     .links svg {

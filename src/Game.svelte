@@ -5,17 +5,23 @@ import {images} from './images.js'
 
 export let mode = 'hard'
 
-let modes = {
-    easy:10,
-    medium: 20,
-    hard: 40,
-    insane: 80
-}
+let modes = [
+    {
+        name:'easy',
+        pairs:10
+    },{
+        name:'medium',
+        pairs:20
+    },{
+        name:'hard',
+        pairs:40
+    },{
+        name:'insane',
+        pairs:80
+    }
+]
 
 
-
-//Number of pairs in the game
-export let pairs = modes[mode]
     
 //Init game varables
 let gameItems //Storage for selected game images 
@@ -24,11 +30,14 @@ let time //Time taken
 let started //Has the current game started - To start timer
 let disabled //Lets us disable input for all cards
 let selectedA, selectedB //Holders for checking our selected pairs
+let pairs
+let blank
+
+$: pairs = modes.find(x=>x.name==mode).pairs
+$: blank = Array(pairs).fill(0);
 
 //We are using Svelte rective properties to reset the game when 'options' is changed. So we start with populating with all options available in the game
-let blank = Array(pairs).fill(0);
 let options =  images;
-
 
 let promises = pause(3000);
 let promiseCount = 0
@@ -115,10 +124,15 @@ const checkMatch = async () => {
 }
 
 //Function to reset the board and restart the game.
-const restart = async () => {
+const restart = async (m) => {
     //We could do this as simply as options = options, but the new card images appear before the cards have finished flipping back around
     //To counter that we actually reset the board twice, once with emty elements, to trigger the reset and card flip and then again to push the new set of game options in and shuffle everything
     //We also disable the board so you can't pick any cards before the reset has finished.
+
+    if(m && m != mode) {
+        mode = m
+    }
+
     disabled = true; 
     options = blank; 
     
@@ -191,20 +205,21 @@ function load_image(src) {
             </li>
         {/each}
         </ul>
+        <div class='reset'>
+        RESTART:
+        {#each modes as {name}}
+            <button type=button class:selected={mode==name} on:click={()=>restart(name)}>{name}</button>
+        {/each}
+        </div>
     {:catch error}
         <h3>Could not load all images :( </h3>
         Thre might be a network connection issue
         <button type=button on:click={restart}>try loading again?</button>
     {/await}
+   
     <footer>
     <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
-    {#await promises}
-        <span />
-    {:then result}
-        <button type=button on:click={restart}>restart</button>
-    {:catch e} 
-        <span />    
-    {/await}
+    
     <div class="links">
         Game 
         <a href="githiub.com/bamroberts/LegoSnap" title="Link to source code" target="_blank" rel="noopener noreferrer">
@@ -235,7 +250,7 @@ function load_image(src) {
         --target-height:1320px;
         display:grid;
         grid-template-columns: repeat(var(--col-count), 1fr);
-        gap:calc(max(250px, 60vmin) / var(--pairs));    
+        gap:min(calc(max(250px, 60vmin) / var(--pairs)), 20px);    
         list-style: none;
         margin:0;
         padding:0;
@@ -253,7 +268,7 @@ li :global(article) {position: relative;}
 li :global(article::before) {
     content: "";
     display: block;
-    padding-bottom: calc(100% / .8);
+    padding-bottom: calc(100% / .85);
   }  
   li :global(article > :first-child) {
     position: absolute;
@@ -309,9 +324,10 @@ li :global(article::before) {
     }
 
     h2, footer {
+                        grid-template-columns: 1fr max-content 1fr;
+
         font-size: clamp(12px,4vw, 2em);
         display:grid;
-        grid-template-columns: 1fr max-content 1fr;
         justify-content: space-between;
         width:100%;
         text-align:center;
@@ -320,9 +336,23 @@ li :global(article::before) {
     }   
 
     footer {
+                /* grid-template-columns: repeat(2, max-content);
+
                 font-size: clamp(10px, 2vw, 1em);
+                gap:40px; */
+
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+    font-size: clamp(10px, 2vw, 1em);
+    gap: 40px;
+    grid: row;
+    line-height: 2.7;
 
     }
+    footer a {white-space: nowrap;}
+    footer svg, footer img {
+        transform:scale(clamp(12px,4vw, 2em));
+    }
+  
 
     h3 {
         font-size:3em;
@@ -379,7 +409,15 @@ li :global(article::before) {
         opacity:1;
         min-height:50vh;
     }
+ div.reset {margin-bottom:10px;        font-size:50%;
+}
 
+    div.reset button {
+        margin-left:10px;
+        padding:3px;
+    }
+
+    div.reset button.selected {font-weight:bold;}
 
 .loading { align-self:center;}
 </style>

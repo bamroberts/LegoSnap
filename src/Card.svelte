@@ -48,6 +48,8 @@
         display: grid;
         place-items: center;   
         cursor: pointer;
+                border-radius:calc(100px / var(--col-count));
+
     }
 
     article:not([disabled=true]):not(.show):hover {

@@ -52,15 +52,15 @@
     }
 
     article:not([disabled=true]):not(.show):hover {
-        transform: perspective(400px) rotateY(18deg);
+        transform: perspective(400px) rotateY(18deg) translateZ(25px);
         transition: all 0.3s cubic-bezier(0.445, 0.05, 0.55, 0.95);
                 /* box-shadow: 2px 2px 6px 1px rgba(0,0,0,0.25); */
-box-shadow:-11px 26px 23px 10px rgba(0,0,0,0.25)
+        box-shadow:-8px 8px 18px 4px rgba(0,0,0,0.25);
 
     }
 
     article.selected {
-            transform: perspective(400px) rotateY(180deg) scale(1.5);
+            transform: perspective(400px) rotateY(180deg) scale(1.3) translateZ(-100px);
             z-index:100;
     }
 
@@ -128,7 +128,7 @@ box-shadow:-11px 26px 23px 10px rgba(0,0,0,0.25)
     }
 
     .selected, .won, [disabled=true] {
-        cursor: not-allowed;
+        cursor: default;
     }
     
 

@@ -408,6 +408,7 @@ li :global(article::before) {
     div.reset button {
         margin-left:10px;
         padding:3px;
+        box-shadow: 2px 2px 4px rgba(0,0,0,0.125)
     }
 
     div.reset button.selected {font-weight:bold;}

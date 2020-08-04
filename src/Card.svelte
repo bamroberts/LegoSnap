@@ -48,8 +48,7 @@
         display: grid;
         place-items: center;   
         cursor: pointer;
-                border-radius:calc(100px / var(--col-count));
-
+        border-radius:20px;
     }
 
     article:not([disabled=true]):not(.show):hover {
@@ -62,7 +61,7 @@ box-shadow:-11px 26px 23px 10px rgba(0,0,0,0.25)
 
     article.selected {
             transform: perspective(400px) rotateY(180deg) scale(1.5);
-            z-index:2;
+            z-index:100;
     }
 
     article.won {
@@ -76,6 +75,7 @@ box-shadow:-11px 26px 23px 10px rgba(0,0,0,0.25)
         height: 100%;
         border-radius: inherit;
         backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
         background: hsl(0, 0%, 100%);
         pointer-events: none;
         border: calc(5vw / var(--col-count)) solid #666;
@@ -96,7 +96,6 @@ box-shadow:-11px 26px 23px 10px rgba(0,0,0,0.25)
     }
 
     section.front {
-        
          transform: rotateY(180deg);
              box-shadow: 2px 2px 12px 2px rgba(0,0,0,0.25);
 

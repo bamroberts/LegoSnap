@@ -1,9 +1,13 @@
 {
-  "theme_color": "#2196f3",
-  "background_color": "#2196f3",
-  "display": "browser",
+  "name": "Lgeo Snap",
+  "short_name": "Lego Snap Memory Game",
+  "description": "Fun memory pairs game with a lego theme. Progressive Web App built with Svelte",
+  "theme_color": "#ff3e00",
+  "background_color": "#ffffff",
+  "display": "standalone",
+
   "Scope": "/",
-  "start_url": "/",
+  "start_url": "/index.html",
   "icons": [
     {
       "src": "images/icons/icon-72x72.png",

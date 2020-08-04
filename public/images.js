@@ -1,0 +1,67 @@
+const path = '/images/svg/'
+//Number of card options in our library
+const optionLength = 25
+//Empty filled array for library options - We keep this handy for resetting the game
+const blank = Array(optionLength).fill(0)
+//Map the index +1 into out build array - As out library is 001.jpg format (in this example we end up with an array with 1-24 in it [1, 2, 3... 24])
+const quick = blank.map((x, i) => (''+(i+1)).padStart(3, '0') +'-lego.svg')
+
+const all = [...quick,
+    '026-ninja.svg',
+    '027-cowboy.svg',
+    '028-knight.svg',
+    '029-explorer.svg',
+    '030-scubadiver.svg',
+    '031-clown.svg',
+    '032-boy.svg',
+    '033-nativeamerican.svg',
+    '034-cashier.svg',
+    '035-spy.svg',
+    '036-mariachi.svg',
+    '037-pirate.svg',
+    '038-fisherman.svg',
+    '039-cyborg.svg',
+    '040-vampire.svg',
+    '041-businessman.svg',
+    '042-conquistador.svg',
+    '043-DJ.svg',
+    '044-americanfootballplayer.svg',
+    '045-cheerleader.svg',
+    '046-santaclaus.svg',
+    '047-diver.svg',
+    '048-thespian.svg',
+    '049-man.svg',
+    '050-man.svg',
+    '051-cowgirl.svg',
+    '052-caveman.svg',
+    '053-witch.svg',
+    '054-vampire.svg',
+    '055-queen.svg',
+    '056-gnome.svg',
+    '057-injured.svg',
+    '058-thief.svg',
+    '059-hiker.svg',
+    '060-devil.svg',
+    '061-desert.svg',
+    '062-ninja.svg',
+    '063-batman.svg',
+    '064-superman.svg',
+    '065-wolverine.svg',
+    '066-Spiderman.svg',
+    '067-dummy.svg',
+    '068-magician.svg',
+    '069-thor.svg',
+    '070-deadpool.svg',
+    '071-businessman.svg',
+    '072-woman.svg',
+    '073-mummy.svg',
+    '074-singer.svg',
+    '075-Mohawk.svg',
+    '076-explorer.svg',
+    '077-dentist.svg',
+    '078-hiphop.svg',
+    '079-surgeon.svg',
+    '080-priest.svg'
+]
+
+const images = all.map(x => path+x)

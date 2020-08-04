@@ -1,6 +1,5 @@
 <script>
 import Game from './Game.svelte'
-	export let name;
 </script>
 
 <main>
@@ -10,8 +9,6 @@ import Game from './Game.svelte'
 <Game />
 
 <style>
-	
-
 	h1 {
 		color: #ff3e00;
 		text-transform: uppercase;

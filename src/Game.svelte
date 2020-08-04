@@ -1,17 +1,21 @@
 <script>
 import Card from './Card.svelte'
 import {scale, fade} from 'svelte/transition'
+import {images} from './images.js'
+
+export let mode = 'hard'
+
+let modes = {
+    easy:10,
+    medium: 20,
+    hard: 40,
+    insane: 80
+}
+
 
 
 //Number of pairs in the game
-export let pairs = 10
-
-//Number of card options in our library
-const optionLength = 24
-//Empty filled array for library options - We keep this handy for resetting the game
-const blank = Array(optionLength).fill(0)
-//Map the index +1 into out build array - As out library is 001.jpg format (in this example we end up with an array with 1-24 in it [1, 2, 3... 24])
-const allOptions = blank.map((x, i) =>  (''+ (i+1)).padStart(3, '0'))
+export let pairs = modes[mode]
     
 //Init game varables
 let gameItems //Storage for selected game images 
@@ -22,7 +26,9 @@ let disabled //Lets us disable input for all cards
 let selectedA, selectedB //Holders for checking our selected pairs
 
 //We are using Svelte rective properties to reset the game when 'options' is changed. So we start with populating with all options available in the game
-let options =  allOptions
+let blank = Array(pairs).fill(0);
+let options =  images;
+
 
 let promises = pause(3000);
 let promiseCount = 0
@@ -33,13 +39,13 @@ $: if(options) {time = 0; tries = 0, selectedA = null, selectedB = null, started
 $: gameItems = [...options].sort(randomSort).slice(0, pairs)
 
 //Promise to preload all images before rendering the game.
-$: promises = Promise.all(gameItems.filter(x => x).map(x => load_image(`/assets/images/svg/${x}-lego.svg`)))
+$: promises = Promise.all(gameItems.filter(x => x).map(x => load_image(x)))
 
 // We then duplicate the array twice (so we will have two of each card), randomise the list and use map to initiate an object for each time to store its state - This is triggered when the above code runs and gameItems changes
-$: cards = [...gameItems, ...gameItems].sort(randomSort).map( x => {
+$: cards = [...gameItems, ...gameItems].sort(randomSort).map( (x,i) => {
     return {
-        item: x,
-        url: `/assets/images/svg/${x}-lego.svg`
+        item: gameItems.findIndex((y) => x == y) +1,
+        url: x
     };
 });
 
@@ -118,7 +124,7 @@ const restart = async () => {
     
     await pause(1000); 
 
-    options = allOptions; 
+    options = images; 
     disabled = false;
 }
 
@@ -150,9 +156,10 @@ function load_image(src) {
 <main>
     
     {#await promises}
-    <div class="message">
+    <div class="loading">
         <h3>Loading.... </h3>
         Image {promiseCount} of {pairs} 
+        <progress id="file" value="{(promiseCount/pairs)*100}" max="100"> {(promiseCount/pairs)*100}% </progress>
     </div>
     {:then results}
         <h2>
@@ -172,10 +179,10 @@ function load_image(src) {
         {#if wonGame}
             <div in:scale class="won message">
                 <h3>Yay you won the game!!!</h3>
-                <button type=button on:click={restart}>restart</button>
+                <button type=button on:click={restart}>Go Again</button>
             </div>   
         {/if} 
-        <ul>
+        <ul class="{mode}" style="--pairs:{pairs};" >
         <!-- Loop through and draw each card -->    
         {#each cards as item, i}
             <li>
@@ -185,11 +192,19 @@ function load_image(src) {
         {/each}
         </ul>
     {:catch error}
-        Could not load all images :(
+        <h3>Could not load all images :( </h3>
+        Thre might be a network connection issue
+        <button type=button on:click={restart}>try loading again?</button>
     {/await}
     <footer>
     <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
-    <button type=button on:click={restart}>restart</button>
+    {#await promises}
+        <span />
+    {:then result}
+        <button type=button on:click={restart}>restart</button>
+    {:catch e} 
+        <span />    
+    {/await}
     <div class="links">
         Game 
         <a href="githiub.com/bamroberts/LegoSnap" title="Link to source code" target="_blank" rel="noopener noreferrer">
@@ -213,14 +228,63 @@ function load_image(src) {
 
 <style>
     ul {
+        
+        --col-count: 5;
+        --target-width:1200px;
+        --row-count: 4;
+        --target-height:1320px;
         display:grid;
-        grid-template-columns: repeat(5, min-content);
-        gap:1em;
+        grid-template-columns: repeat(var(--col-count), 1fr);
+        gap:calc(max(250px, 60vmin) / var(--pairs));    
         list-style: none;
         margin:0;
         padding:0;
+        
+        width:100%;
         height:100%;
+        max-width:1200px;
     }
+
+    [style*="--aspect-ratio"] > :first-child {
+  width: 100%;
+}
+
+li :global(article) {position: relative;}
+li :global(article::before) {
+    content: "";
+    display: block;
+    padding-bottom: calc(100% / .8);
+  }  
+  li :global(article > :first-child) {
+    position: absolute;
+
+    height: 100%;
+
+  }
+
+
+
+    ul.medium {
+         --col-count: 8;
+         --row-count:5;
+    }
+
+    ul.hard {
+         --col-count: 10;
+         --row-count:8;
+    }
+
+    ul.insane {
+         --col-count: 16;
+         --row-count: 10;
+    }
+
+
+     ul.portrait {
+        --col-count: var(--row-count);
+        gap:1vh;
+    }
+
     main {
         display: grid;
         position: relative; 
@@ -245,6 +309,7 @@ function load_image(src) {
     }
 
     h2, footer {
+        font-size: clamp(12px,4vw, 2em);
         display:grid;
         grid-template-columns: 1fr max-content 1fr;
         justify-content: space-between;
@@ -253,6 +318,11 @@ function load_image(src) {
         align-items: baseline;
 
     }   
+
+    footer {
+                font-size: clamp(10px, 2vw, 1em);
+
+    }
 
     h3 {
         font-size:3em;
@@ -304,4 +374,12 @@ function load_image(src) {
     }
     
 
+    main {
+        transition: all 0.5s;
+        opacity:1;
+        min-height:50vh;
+    }
+
+
+.loading { align-self:center;}
 </style>

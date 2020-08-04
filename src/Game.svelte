@@ -336,16 +336,9 @@ li :global(article::before) {
     }   
 
     footer {
-                /* grid-template-columns: repeat(2, max-content);
-
-                font-size: clamp(10px, 2vw, 1em);
-                gap:40px; */
-
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-    font-size: clamp(10px, 2vw, 1em);
-    gap: 40px;
-    grid: row;
-    line-height: 2.7;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        font-size: clamp(10px, 2vw, 1em);
+        gap: 10px 40px;
 
     }
     footer a {white-space: nowrap;}
@@ -389,7 +382,7 @@ li :global(article::before) {
     .links svg, .links img {
         position:absolute;
         left:0;
-        top:-2px;
+        top:-4px;
     }
     .links a {
         position:relative;

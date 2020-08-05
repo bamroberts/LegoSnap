@@ -2,25 +2,51 @@
 import Card from './Card.svelte'
 import {scale, fade} from 'svelte/transition'
 import {images} from './images.js'
+import {onMount} from 'svelte'
 
 export let mode = 'hard'
 
 let modes = [
     {
         name:'easy',
-        pairs:10
+        pairs:10,
+        sizes:[2, 5, 10]
     },{
         name:'medium',
-        pairs:20
+        pairs:20,
+        sizes:[2, 4, 5, 10, 20]
     },{
         name:'hard',
-        pairs:40
+        pairs:40,
+        sizes:[2, 4, 5, 8, 10, 16, 20, 40]
     },{
         name:'insane',
-        pairs:80
+        pairs:80,
+        sizes:[2, 4, 5, 8, 10, 16, 20, 32, 40, 80]
     }
 ]
 
+let pairs
+let blank
+let modeConfig;
+
+$: modeConfig = modes.find(x=>x.name==mode)
+$: pairs = modeConfig.pairs
+$: blank = Array(pairs).fill(0);
+
+
+let grid;
+let portrait = false;
+let holder;
+let ratio = 1;
+let reverseRatio
+let cols;
+$: if(holder) holder.offsetHeight , holder.offsetWidth
+$: if(holder) ratio = holder.offsetHeight / holder.offsetWidth
+$: if(holder) portrait = (ratio > 1.2)
+$: if(holder) reverseRatio = holder.offsetWidth / holder.offsetHeight
+//$: if(holder) console.log(cols = modeConfig.sizes.find((x)=> x > ratio * pairs * 2)
+$: if(holder) cols = modeConfig.sizes[modeConfig.sizes.findIndex((x)=> x > portrait ? reverseRatio : ratio * pairs) + (portrait ? 1 : -1) ]
 
     
 //Init game varables
@@ -30,11 +56,7 @@ let time //Time taken
 let started //Has the current game started - To start timer
 let disabled //Lets us disable input for all cards
 let selectedA, selectedB //Holders for checking our selected pairs
-let pairs
-let blank
 
-$: pairs = modes.find(x=>x.name==mode).pairs
-$: blank = Array(pairs).fill(0);
 
 //We are using Svelte rective properties to reset the game when 'options' is changed. So we start with populating with all options available in the game
 let options =  images;
@@ -167,7 +189,6 @@ function load_image(src) {
 }
 
 </script>
-<main>
     
     {#await promises}
     <div class="loading">
@@ -196,15 +217,17 @@ function load_image(src) {
                 <button type=button on:click={restart}>Go Again</button>
             </div>   
         {/if} 
-        <ul class="{mode}" style="--pairs:{pairs};" >
-        <!-- Loop through and draw each card -->    
-        {#each cards as item, i}
-            <li>
-                <!-- We want to pass everything in the cards state as props to our component. Disabled is a global game state so we pass that seperatly, we also pass the index to the component so we can find it in the state array when the use interacts later  -->
-                <Card {...item} index={i} {disabled} on:selectCard={selectCard} />
-            </li>
-        {/each}
-        </ul>
+        <main bind:this={holder}>
+            <ul class="{mode}" class:portrait  style="--pairs:{pairs}; --col-guess:{cols}; --row-guess:{(pairs * 2) / cols}" bind:this={grid} >
+            <!-- Loop through and draw each card -->    
+            {#each cards as item, i}
+                <li>
+                    <!-- We want to pass everything in the cards state as props to our component. Disabled is a global game state so we pass that seperatly, we also pass the index to the component so we can find it in the state array when the use interacts later  -->
+                    <Card {...item} index={i} {disabled} on:selectCard={selectCard} />
+                </li>
+            {/each}
+            </ul>
+        </main>
         <div class='reset'>
         RESTART:
         {#each modes as {name}}
@@ -217,7 +240,8 @@ function load_image(src) {
         <button type=button on:click={restart}>try loading again?</button>
     {/await}
    
-    <footer>
+   
+ <footer>
     <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
     
     <div class="links">
@@ -239,15 +263,15 @@ function load_image(src) {
 
     </footer>
     
-</main>
 
 <style>
     ul {
         
         --col-count: 5;
-        --target-width:1200px;
         --row-count: 4;
-        --target-height:1320px;
+
+        /* --target-width:1200px;
+        --target-height:1320px; */
         display:grid;
         grid-template-columns: repeat(var(--col-count), 1fr);
         gap:min(calc(max(250px, 60vmin) / var(--pairs)), 20px);    
@@ -256,7 +280,8 @@ function load_image(src) {
         padding:0;
         
         width:100%;
-        height:100%;
+
+        align-self: start;
         max-width:1200px;
     }
 
@@ -323,10 +348,11 @@ li :global(article::before) {
 
     }
 
+   
     h2, footer {
                         grid-template-columns: 1fr max-content 1fr;
 
-        font-size: clamp(12px,4vw, 2em);
+        font-size: clamp(12px,4vmin, 2em);
         display:grid;
         justify-content: space-between;
         width:100%;
@@ -337,8 +363,9 @@ li :global(article::before) {
 
     footer {
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        font-size: clamp(10px, 2vw, 1em);
+        font-size: clamp(10px, 2vmin, 1em);
         gap: 10px 40px;
+        padding: 5px 0 2px;
 
     }
     footer a {white-space: nowrap;}
@@ -402,8 +429,10 @@ li :global(article::before) {
         opacity:1;
         min-height:50vh;
     }
- div.reset {margin-bottom:10px;        font-size:50%;
-}
+    div.reset {
+        font-size:50%;
+        text-align: center;
+    }
 
     div.reset button {
         margin-left:10px;
@@ -411,7 +440,13 @@ li :global(article::before) {
         box-shadow: 2px 2px 4px rgba(0,0,0,0.125)
     }
 
+
+    div.reset button:not(:hover):not(.selected)  {
+        border-color: #333;
+    }
     div.reset button.selected {font-weight:bold;}
 
-.loading { align-self:center;}
+.loading { align-self:center; text-align:center;}
+
+h2, .reset button, .reset {margin: 1vh;}
 </style>

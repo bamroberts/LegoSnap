@@ -151,12 +151,14 @@ const restart = async (m) => {
     //To counter that we actually reset the board twice, once with emty elements, to trigger the reset and card flip and then again to push the new set of game options in and shuffle everything
     //We also disable the board so you can't pick any cards before the reset has finished.
 
-    if(m && m != mode) {
-        mode = m
-    }
+    
 
     disabled = true; 
     options = blank; 
+
+    if(m) {
+        mode = m
+    }
     
     await pause(1000); 
 
@@ -214,7 +216,7 @@ function load_image(src) {
         {#if wonGame}
             <div in:scale class="won message">
                 <h3>Yay you won the game!!!</h3>
-                <button type=button on:click={restart}>Go Again</button>
+                <button type=button on:click={()=>restart(mode)}>Go Again</button>
             </div>   
         {/if} 
         <main bind:this={holder}>
@@ -332,20 +334,23 @@ li :global(article::before) {
     }
 
 
-    main div.message {
+     div.message {
         padding: 8em;
         
         text-align: center;
 
     }
 
-    main div.won {
+     div.won {
         position: absolute;
         background-color: rgba(200,255,200,0.1);
         box-shadow: 2px 2px 5px 4px rgba(0,0,0,0.25);
         z-index: 1;
         backdrop-filter: blur(3px);
-
+        transform: translateZ(118px);
+        z-index: 1000;
+        align-self: center;
+        width: auto;
     }
 
    

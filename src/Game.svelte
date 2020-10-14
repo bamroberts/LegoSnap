@@ -14,7 +14,7 @@ let modes = [
     },{
         name:'medium',
         pairs:20,
-        sizes:[2, 4, 5, 10, 20]
+        sizes:[2, 4, 5, 8, 10, 20]
     },{
         name:'hard',
         pairs:40,
@@ -41,12 +41,13 @@ let holder;
 let ratio = 1;
 let reverseRatio
 let cols;
-$: if(holder) holder.offsetHeight , holder.offsetWidth
 $: if(holder) ratio = holder.offsetHeight / holder.offsetWidth
-$: if(holder) portrait = (ratio > 1.2)
 $: if(holder) reverseRatio = holder.offsetWidth / holder.offsetHeight
-//$: if(holder) console.log(cols = modeConfig.sizes.find((x)=> x > ratio * pairs * 2)
-$: if(holder) cols = modeConfig.sizes[modeConfig.sizes.findIndex((x)=> x > portrait ? reverseRatio : ratio * pairs) + (portrait ? 1 : -1) ]
+
+$: if(holder) portrait = (ratio > 1.2)
+$: if(holder) console.log(  pairs ,'/', (1.2 + (portrait ? ratio : reverseRatio)))
+ $: if(holder) console.log(cols = modeConfig.sizes.find((x)=> x > pairs / (1.2 + (portrait ? ratio : reverseRatio ))))
+// $: if(holder) cols = modeConfig.sizes[modeConfig.sizes.findIndex((x)=> x > portrait ? reverseRatio : ratio * pairs) ]
 
     
 //Init game varables
@@ -220,7 +221,7 @@ function load_image(src) {
             </div>   
         {/if} 
         <main bind:this={holder}>
-            <ul class="{mode}" class:portrait  style="--pairs:{pairs}; --col-guess:{cols}; --row-guess:{(pairs * 2) / cols}" bind:this={grid} >
+            <ul class="{mode}" class:portrait  style="--pairs:{pairs}; --col-count:{cols}; --row-count:{(pairs * 2) / cols}" bind:this={grid} >
             <!-- Loop through and draw each card -->    
             {#each cards as item, i}
                 <li>
@@ -323,7 +324,7 @@ li :global(article::before) {
 
 
      ul.portrait {
-        --col-count: var(--row-count);
+        --col-count: var(--row-count)!important;
         gap:1vh;
     }
 
